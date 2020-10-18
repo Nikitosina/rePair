@@ -1,0 +1,25 @@
+// Это чтобы не ерзало
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="initial-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes" />
+</head>
+
+
+
+// чтобы пустых полей не было
+<body style="margin: 0px 0px 0px 0px; overflow: hidden;">
+
+
+
+<script type="text/javascript">
+// Это и так понятно
+
+var isMobile = {
+    Android: function() {return navigator.userAgent.match(/Android/i);},
+    BlackBerry: function() {return navigator.userAgent.match(/BlackBerry/i);},
+    iOS: function() {return navigator.userAgent.match(/iPhone|iPad|iPod/i);},
+    Opera: function() {return navigator.userAgent.match(/Opera Mini/i);},
+    Windows: function() {return navigator.userAgent.match(/IEMobile/i);},
+    any: function() {return (isMobile.Android() || isMobile.BlackBerry() || isMobile.iOS() || isMobile.Opera() || isMobile.Windows());}
+}

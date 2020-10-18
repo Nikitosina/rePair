@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<!--manifest="cache.manifest"-->
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+    <meta name="viewport" content="initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+
+    <link rel="apple-touch-icon" href="{{url_for('static', filename='textures/TankR.png')}}"/>
+    <link rel="shortcut icon" href="{{url_for('static', filename='textures/TankR.png')}}" type="image/x-icon">
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <!--
+    <link rel="apple-touch-startup-image" href="startup.png" />-->
+
+    <title>S7</title>
+    <script type=text/javascript src="{{ url_for('static', filename='js/jquery-2.2.2.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/socketio_2.2.0.js') }}" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+    <!-- <link rel="stylesheet" type="text/css" href="index.css" media="all"/> -->
+  </head>
+  <body style="margin: 0px 0px 0px 0px; overflow: hidden;">
+    <canvas width='100%' height='100%' id='canvas'></canvas>
+    <img src="{{url_for('static', filename='textures/Font.png')}}" id="Fontimg" hidden="false">
+    
+    <img src="{{url_for('static', filename='textures/table_bg.jpeg')}}" id="table_bgimg" hidden="false">
+    <img src="{{url_for('static', filename='textures/Card_Images.png')}}" id="card_imagesimg" hidden="false">
+
+    <!-- <audio src = "{{url_for('static', filename='sounds/ShotSound.mp3')}}" id="ShotSound"></audio> -->
+
+    <script src="{{url_for('static', filename='Application.js')}}"></script>
+    <script src="{{url_for('static', filename='Classes.js')}}"></script>
+    <script src="{{url_for('static', filename='CreatingRoom.js')}}"></script>
+    <script src="{{url_for('static', filename='Maps.js')}}"></script>
+    <script src="{{url_for('static', filename='MainScreen.js')}}"></script>
+    <script src="{{url_for('static', filename='LoginPage.js')}}"></script>
+    <script src="{{url_for('static', filename='LoadingScreen.js')}}"></script>
+    <script src="{{url_for('static', filename='CastleGame.js')}}"></script>
+    <script src="{{url_for('static', filename='GameOver.js')}}"></script>
+
+  </body>
+</html>
