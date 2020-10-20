@@ -13,10 +13,9 @@ app = Flask(__name__)
 socketio = SocketIO(app)
 
 # data = {}
-rooms = [Room({'players_num': 2, 'game_type': 'Castle', 'money': 100, 'private': False, 'first_card': {}, 'win_places': []}, 9098696378)]
+rooms = [Room({'players_num': 2, 'game_type': 'Castle', 'n_cards': 5, 'money': 100, 'private': False, 'first_card': {}, 'win_places': []}, 9098696378)]
 #          Room({'players_num': 2, 'game_type': 'Castle', 'money': 200, 'private': False}, 9098696372),
 #          Room({'players_num': 2, 'game_type': 'Castle', 'money': 300, 'private': False}, 9098696371)]
-# rooms = []
 p1 = None
 t = None
 
@@ -36,7 +35,7 @@ def create_room(json):
     global rooms
     new_room = Room(json, request.sid)
     rooms.append(new_room)
-    print(rooms[1].name)
+    print([x.name for x in rooms])
     emit('created_room', new_room.to_json())
 
 
@@ -45,9 +44,23 @@ def get_all_rooms():
     global rooms
     res = []
     for room in rooms:
-        if len(room.players) < room.players_num:
+        if len(room.players) < room.players_num and not room.private:
             res.append(room.to_json())
     emit('all_rooms', res, room=request.sid)
+
+
+@socketio.on('get_private_room')
+def get_private_room(json):
+    global rooms
+    print(json)
+    for room in rooms:
+        if room.private:
+            if room.codename == json['codename']:
+                print(1)
+                join({'name': room.name})
+                return
+    print(2)
+    emit('error', {'error': f'Room "{json["codename"]}" was not found'}, room=request.sid)
 
 
 @socketio.on('join')
@@ -63,7 +76,7 @@ def join(json):
                     room.broadcast('start', {})
             else:
                 print(1)
-                emit('err', {'err': 'too many players'}, room=request.sid)
+                emit('error', {'error': 'too many players'}, room=request.sid)
             return
 
 
@@ -139,46 +152,6 @@ def update_map(json):
             for client in room['players']:
                 if client != request.sid:
                     emit('update_map', json, room=client)
-
-
-'''@socketio.on('check_hit')
-def check_hit(json):
-    f = False
-    resp = []
-    for room in rooms:
-        if request.sid in room['players']:
-            for j in range(len(room['obj'])):
-                if json[0]['name'] == room['obj'][j]['name']:
-                    if json[0]['x'] == room['obj'][j]['x'] and json[0]['y'] == room['obj'][j]['y']:
-                        room['obj'][j]['hp'] -= 1
-                        f = True
-                        resp.append(room['obj'][j])
-                        break
-            if f:
-                for j in range(len(room['obj'])):
-                    if json[1]['name'] == room['obj'][j]['name']:
-                        resp.append(json[1])
-                        room['obj'].pop(j)
-                        send_to_all_clients_in_room(room, request.sid, 'update_obj', resp)
-                        break
-            else:
-                send_to_all_clients_in_room(room, request.sid, 'update_obj', resp)
-    print(resp)'''
-
-
-@socketio.on('game_over')
-def del_room(json):
-    global rooms
-    for i in range(len(rooms)):
-        if request.sid in rooms[i]['players']:
-            rooms.pop(i)
-            break
-    print(len(rooms))
-
-
-def timer(s, room):
-    time.sleep(s)
-    spawn_bullet_pack(room)
 
 
 if __name__ == '__main__':

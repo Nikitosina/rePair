@@ -6,7 +6,7 @@ class TFormCastleGame extends TControl{
 
 		this.room = room;
 		console.log(this.room);
-		this.deck = this.generate_deck(3);
+		this.deck = this.generate_deck(this.room.n_cards);
 		this.card = this.deck[0];
 		this.on_castle_init({'top_card': room['first_card']}); //creates this.top_card
 		this.add_child(this.card);

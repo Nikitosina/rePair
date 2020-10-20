@@ -1,5 +1,5 @@
 class TButton extends TControl {
-    constructor(Canvas, x, y, width, height, fill_color='#000000', text='', groupIndex){
+    constructor(Canvas, x, y, width, height, fill_color='#000000', text='', groupIndex, font_size=6){
         super();
         this.Canvas = Canvas;
         this.x = x;
@@ -10,6 +10,7 @@ class TButton extends TControl {
         this.text = text;
         this.groupIndex = groupIndex;
         this.pressed = false;
+        this.font_size = font_size;
     }
     Show(){
         this.Canvas.fillStyle=this.fill_color;
@@ -18,7 +19,7 @@ class TButton extends TControl {
 	  	this.Canvas.fill();
 
 	  	this.Canvas.fillStyle = '#ffffff';
-	  	this.Canvas.font = (8 * Application.ScaleY).toString() + 'px Arial';
+	  	this.Canvas.font = (this.font_size * Application.ScaleY).toString() + 'px Arial'; // 8 * Application.ScaleY
 	  	this.Canvas.textAlign = 'center';
 	  	this.Canvas.textBaseline = 'middle';
 	  	this.Canvas.fillText(this.text, (this.x + this.width / 2) * Application.ScaleX, (this.y + this.height / 2) * Application.ScaleY);
@@ -44,7 +45,7 @@ class TButton extends TControl {
 		else this.fill_color = '#CA6505';
 	}
 	on_click(e) {
-        console.log(this.is_inside(e.x, e.y), this);
+        // console.log(this.is_inside(e.x, e.y), this);
         if (!this.is_inside(e.x, e.y)) return;
         if (this.groupIndex) {
             for (var c of this.parent.children) {
@@ -99,26 +100,43 @@ class TBox extends TControl{
 }
 
 class TTextField extends TControl {
-    constructor(Canvas, x, y, width, height, contour_color='#000000', fill_color='ffffff'){
+    constructor(Canvas, text, x, y, width, height, rect_color='', font_size=8, font_color='#ffffff'){
         super();
         this.Canvas = Canvas;
+        this.text = text;
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
-        this.contour_color = contour_color;
-        this.fill_color = fill_color;
+        this.font_size = font_size;
+        this.font_color = font_color;
+        this.rect_color = rect_color;
         this.border = 2
     }
     Show() {
-        this.Canvas.fillStyle=this.contour_color;
-	  	this.Canvas.beginPath();
-	  	this.Canvas.rect(this.x * Application.ScaleX, this.y * Application.ScaleY, this.width * Application.ScaleX, this.height * Application.ScaleY);
-	  	this.Canvas.fill();
+        if (this.rect_color) {
+            this.Canvas.fillStyle=this.rect_color;
+	  	    this.Canvas.beginPath();
+	  	    this.Canvas.rect(this.x * Application.ScaleX, this.y * Application.ScaleY, this.width * Application.ScaleX, this.height * Application.ScaleY);
+            this.Canvas.fill();
+        }
+        
+        this.Canvas.fillStyle = this.font_color;
+	  	this.Canvas.font = (this.font_size * Application.ScaleY).toString() + 'px Arial';
+	  	this.Canvas.textAlign = 'center';
+	  	this.Canvas.textBaseline = 'middle';
+	  	this.Canvas.fillText(this.text, (this.x + this.width / 2) * Application.ScaleX, (this.y + this.height / 2) * Application.ScaleY);
+    }
+    change_text(new_text) {
+        this.text = new_text;
+    }
+}
 
-        this.Canvas.fillStyle=this.fill_color;
-	  	this.Canvas.beginPath();
-	  	this.Canvas.rect((this.x + this.border) * Application.ScaleX, (this.y + this.border) * Application.ScaleY, (this.width - 2 * this.border) * Application.ScaleX, (this.height - 2 * this.border) * Application.ScaleY);
-	  	this.Canvas.fill();
+class TErrorField extends TTextField {
+    constructor(Canvas, text, x, y, width, height, rect_color='', font_size=8, font_color='#ff0000') {
+        super(Canvas, text, x, y, width, height, rect_color, font_size, font_color);
+    }
+    Show() {
+        super.Show()
     }
 }
