@@ -15,11 +15,26 @@ class TFormCastleGame extends TControl{
 		this.finished = false;
 		this.place = null;
 
-		this.main_menu_btn = this.add_child(new TButton(Canvas, 5, 85, 90, 10, "#CA6505", 'Main menu'));
+		this.main_menu_btn = this.add_child(new TButton(Canvas, 5, 85, 90, 10, "#CA6505", 'Main Menu'));
 		this.main_menu_btn.click = this.main_menu_btn_click.bind(this);
+		this.play_again_btn = this.add_child(new TButton(Canvas, 5, 72, 90, 10, "#CA6505", 'Play Again'));
+		this.play_again_btn.click = this.play_again.bind(this);
+		this.play_again_btn.visible = false;
+		this.place_label = this.add_child(new TTextField(this.Canvas, 'Your place is ', 50, 5, 1, 1, '', 6))
 
+		if ('$updated_castle' in socket._callbacks) {
+			socket._callbacks['$updated_castle'] = []
+			socket._callbacks['$get_place'] = []
+			socket._callbacks['$card_played'] = []
+			socket._callbacks['$game_has_ended'] = []
+		}
+		
 		socket.on('updated_castle', this.on_castle_updated.bind(this));
-		socket.on('get_place', this.on_get_place.bind(this))
+		socket.on('get_place', this.on_get_place.bind(this));
+		socket.on('card_played', this.on_card_played.bind(this));
+		socket.on('game_has_ended', this.on_game_end.bind(this));
+
+		console.log(socket._callbacks);
 
 //		this.ButtonUp1 = new TButton();
 	}
@@ -32,8 +47,10 @@ class TFormCastleGame extends TControl{
 			this.Canvas.fillStyle = 'black';
 			this.Canvas.fillRect(0, 0, CanvasElement.width, CanvasElement.height);
 			this.Canvas.globalAlpha = 1;
-			Application.print_with_the_font('your place is ' + this.place, 13 * Application.ScaleX, 20 * Application.ScaleY, Application.ScaleX * 0.5);
+			// Application.print_with_the_font('your place is ' + this.place, 13 * Application.ScaleX, 20 * Application.ScaleY, Application.ScaleX * 0.5);
+			this.place_label.Show()
 			this.main_menu_btn.Show();
+			if (this.play_again_btn.visible) this.play_again_btn.Show();
 		}
 		else {
 			this.card.Show();
@@ -61,32 +78,22 @@ class TFormCastleGame extends TControl{
 		if (!this.finished) {
 			var your_id_clicked = this.card.get_item_id(e);
 			var top_id_clicked = this.top_card.get_item_id(e);
-			var flag = false;
+			var id = false;
 			if (your_id_clicked > -1) {
-				if (this.top_card.check_item(your_id_clicked)) flag = true;
+				if (this.top_card.check_item(your_id_clicked)) id = your_id_clicked;
 			} else if (top_id_clicked > -1) {
-				if (this.card.check_item(top_id_clicked)) flag = true;
+				if (this.card.check_item(top_id_clicked)) id = top_id_clicked;
 			}
-			if (flag) {
-				this.top_card.items = this.card.items;
-				this.top_card.n_items = this.card.n_items;
-				this.deck.splice(0, 1);
-				console.log(this.deck);
-				socket.emit('update_castle', {'items': this.top_card.items});
-				if (this.deck.length > 0) this.card = this.deck[0];
-				else {
-					this.card = null;
-					this.finished = true;
-					socket.emit('get_place');
-				}
+			if (id > -1) {
+				socket.emit('update_castle', {'items': this.card.items, 'item_id': id});
 			}
 		}
-		else this.main_menu_btn.on_click(e);
+		else super.on_click(e);
 	}
 	on_castle_init(msg) { // initializes castle
 		this.top_card = new TCard(this.Canvas, msg['top_card']['x'], msg['top_card']['y'], 150);
 		this.top_card.items = [];
-		this.top_card.n_items = msg['top_card']['n_items'];
+		this.top_card.n_items = msg['top_card']['items'].length;
 		for (var i = 0; i < msg['top_card']['items'].length; i++) {
 			this.top_card.items.push(new TItem(this.Canvas, msg['top_card']['items'][i]['number'], msg['top_card']['r'], 0, 0, msg['top_card']['items'][i]['scale'], msg['top_card']['items'][i]['rotation']))
 		}
@@ -102,12 +109,30 @@ class TFormCastleGame extends TControl{
 		}
 		this.children[0] = this.top_card;
 	}
+	on_card_played() {
+		this.deck.splice(0, 1);
+		console.log(this.deck);
+		if (this.deck.length > 0) this.card = this.deck[0];
+		else {
+			this.card = null;
+			this.finished = true;
+			socket.emit('get_place');
+		}
+	}
 	on_get_place(msg) {
 		this.place = msg['place'];
 		this.finished = true;
+		this.place_label.change_text('Your place is ' + this.place)
 		console.log(this.place)
 	}
-	main_menu_btn_click(){
+	on_game_end(msg) {
+		this.play_again_btn.visible = true;
+	}
+	play_again() {
+		socket.emit('play_again', this.room)
+	}
+	main_menu_btn_click() {
+		socket.emit('leave_room', this.room);
 		var FormMainScreen = new TFormMainScreen(Canvas);
 		Application.set_form(FormMainScreen);
 	}

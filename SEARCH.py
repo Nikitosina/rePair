@@ -10,6 +10,7 @@ from pprint import pprint
 from Classes import Room
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'rePaiR!'
 socketio = SocketIO(app)
 
 # data = {}
@@ -44,7 +45,7 @@ def get_all_rooms():
     global rooms
     res = []
     for room in rooms:
-        if len(room.players) < room.players_num and not room.private:
+        if len(room.players) < room.players_num and not room.private and room.visible:
             res.append(room.to_json())
     emit('all_rooms', res, room=request.sid)
 
@@ -66,13 +67,15 @@ def get_private_room(json):
 @socketio.on('join')
 def join(json):
     global rooms, p1, t
-    print(json)
     for room in rooms:
         if room.name == json['name']:
             if len(room.players) < room.players_num:
+                room.broadcast('new_player', request.sid)
                 room.players.append(request.sid)
-                room.broadcast('new_player', room.to_json())
+                emit('connect_to_room', room.to_json(), room=request.sid)
                 if len(room.players) == room.players_num:
+                    room.visible = False
+                    print('start')
                     room.broadcast('start', {})
             else:
                 print(1)
@@ -93,10 +96,15 @@ def disconnect():
 
 @socketio.on('update_castle')
 def update_castle(json):
-    print(888)
+    items = json['items']
+    item_id = json['item_id']
+    print(items, item_id)
     for room in rooms:
         if request.sid in room.players:
-            room.broadcast('updated_castle', json)
+            success = room.place_card(items, item_id)
+            if success:
+                emit('card_played', {}, room=request.sid)
+            # room.broadcast('updated_castle', json)
 
 
 @socketio.on('get_place')
@@ -106,52 +114,43 @@ def get_place():
             if request.sid not in room.win_places:
                 room.win_places.append(request.sid)
                 emit('get_place', {'place': len(room.win_places)}) # room.places.index(request.sid) + 1})
-                if len(room.win_places) == room.players_num - 1:
+                if len(room.win_places) == room.players_num - 1: # means game has finished
                     for i in room.players:
                         if i not in room.win_places:
                             last_player = i
                     emit('get_place', {'place': room.players_num}, room=last_player)
-                    rooms.pop(rooms.index(room))
-                    print(rooms)
+                    room.broadcast('game_has_ended', {})
+                    room.win_places.append(last_player)
+                    room.old_players = room.players.copy()
+                    room.win_places = []
+                    room.players = []
 
 
-
-# FROM TANKOMANIA
-@socketio.on('update_obj')
-def update_obj(json):
-    global rooms
+@socketio.on('leave_room')
+def leave_room(json):
     for room in rooms:
-        if request.sid in room['players']:
-            for i in range(len(json)):
-                create = True
-                for j in range(len(room['obj'])):
-                    if json[i]['name'] == room['obj'][j]['name']:
-                        if 'status' in json[i]:
-                            room['obj'].pop(j)
-                        else:
-                            if 'skin' in json[i]:
-                                json[i].pop('skin')
-                            room['obj'][j].update(json[i])
-                        create = False
-                        break
-                if create and 'status' not in json[i]:
-                    room['obj'].append(json[i])
-            # room.update(json)
-            for client in room['players']:
-                if client != request.sid:
-                    emit('update_obj', json, room=client)
+        if json['name'] == room.name:
+            if request.sid in room.players:
+                room.players.pop(room.players.index(request.sid))
+            if request.sid in room.old_players:
+                room.old_players.pop(room.old_players.index(request.sid))
 
-    print(json, rooms)
+            if not room.players and not room.old_players:
+                rooms.pop(rooms.index(room))
+            elif not room.old_players and len(room.players) < room.players_num and not room.win_places:
+                room.visible = True
+            return
 
 
-@socketio.on('update_map')
-def update_map(json):
+@socketio.on('play_again')
+def play_again(json):
     for room in rooms:
-        if request.sid in room['players']:
-            room['map'] = json
-            for client in room['players']:
-                if client != request.sid:
-                    emit('update_map', json, room=client)
+        if json['name'] == room.name:
+            if request.sid in room.old_players and len(room.players) < room.players_num:
+                room.old_players.pop(room.old_players.index(request.sid))
+                join(json)
+            if not room.old_players and len(room.players) < room.players_num and not room.win_places:
+                room.visible = True
 
 
 if __name__ == '__main__':

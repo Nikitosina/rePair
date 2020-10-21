@@ -13,10 +13,16 @@ class TFormMainScreen extends TControl {
 		this.connect_to_private_btn = this.add_child(new TButton(Canvas, 37, 5, 28, 10, "#CA6505", 'Private', undefined, 4));
 		this.connect_to_private_btn.click = this.connect_to_private.bind(this)
 
+		if ('$all_rooms' in socket._callbacks) {
+			socket._callbacks['$all_rooms'] = []
+			socket._callbacks['$connect_to_room'] = []
+			socket._callbacks['$err'] = []
+		}
+
 		socket.on('all_rooms', this.on_get_all_rooms.bind(this));
-		socket.on('new_player', this.on_new_player.bind(this));
+		socket.on('connect_to_room', this.on_connect_to_room.bind(this));
 		socket.on('err', this.on_error.bind(this));
-		this.get_all_rooms()
+		this.get_all_rooms();
 	}
 	Show() {
 		this.Canvas.drawImage(this.table_bg, 0, 0, CanvasElement.width, CanvasElement.height);
@@ -49,7 +55,7 @@ class TFormMainScreen extends TControl {
 	join_room_btn_click(e, btn) {
 		socket.emit('join', {'name': btn.json['name']});
 	}
-	on_new_player(msg) {
+	on_connect_to_room(msg) {
 		console.log(msg);
 		var FormLoadingScreen = new TFormLoadingScreen(Canvas, msg);
 		Application.set_form(FormLoadingScreen);

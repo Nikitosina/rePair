@@ -13,10 +13,12 @@ class Room:
         self.name = 'Room' + str(randint(0, 100000))
         self.players = [req_sid]
         self.players_num = json['players_num']
+        self.old_players = []
         self.game_type = json['game_type']
         self.n_cards = json['n_cards']
         self.money = json['money']
         self.private = json['private']
+        self.visible = True
         if self.private:
             self.codename = self.generate_codename()
         self.first_card = json['first_card']
@@ -42,6 +44,14 @@ class Room:
         for p in self.players:
             # print(len(self.players))
             emit(event, msg, room=p)
+    
+    def place_card(self, items, item_id):
+        for i in range(len(self.first_card['items'])):
+            if item_id == self.first_card['items'][i]['number']:
+                self.first_card['items'] = items
+                self.broadcast('updated_castle', {'items': items})
+                return True
+        return False
 
 
 class DB:
