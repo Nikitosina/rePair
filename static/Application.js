@@ -54,14 +54,17 @@ class TApplication {
 		this.curForm = form;
 	}
 	Show() {
-		if ((CanvasElement.width != window.innerWidth) || (CanvasElement.height != window.innerHeight)) {
-			CanvasElement.width = window.innerWidth;
-			CanvasElement.height = window.innerHeight;
-			Canvas.imageSmoothingEnabled = false;
+		if ((CanvasElement.width != window.innerWidth * res) || (CanvasElement.height != window.innerHeight * res)) {
+			CanvasElement.width = window.innerWidth * res;
+			CanvasElement.height = window.innerHeight * res;
+			CanvasElement.style.width = window.innerWidth + 'px';
+			CanvasElement.style.height = window.innerHeight + 'px';
+			Canvas.scale(res, res);
+			Canvas.imageSmoothingEnabled = true;
 		}
-		this.ScaleX = CanvasElement.width / 100;
-		this.ScaleY = CanvasElement.height / 100;
-		this.curForm.Show();
+		this.ScaleX = CanvasElement.width * scale / 100;
+		this.ScaleY = CanvasElement.height * scale / 100;
+		if (this.curForm) this.curForm.Show();
 	}
 	on_key_down(e) {
 		if ('on_key_down' in this.curForm) this.curForm.on_key_down(e);
@@ -93,11 +96,26 @@ class TApplication {
 
 window.Application = new TApplication;
 
+window.res = window.devicePixelRatio || 1;
+window.scale = 1 / res;
+
 window.CanvasElement = document.getElementById("canvas");
 window.Canvas = CanvasElement.getContext('2d');
 
+CanvasElement.width = window.innerWidth * res;
+CanvasElement.height = window.innerHeight * res;
+CanvasElement.style.width = window.innerWidth + 'px';
+CanvasElement.style.height = window.innerHeight + 'px';
+
+Canvas.scale(res, res);
+
 window.Sounds = {};
 window.KEYCODES = {'48': 0, '49': 1, '50': 2, '51': 3, '52': 4, '53': 5, '54': 6, '55': 7, '56': 8, '57': 9}
+window.STYLES = {'btn': '#254E70',
+				 'btn_pressed': '#37718E',
+				 'box': '#162D40',
+				 'cn_circle': '#E87461',
+				 'cn_circle_outline': '#E87461'}
 
 window.isMobile = {
     Android: function() {return navigator.userAgent.match(/Android/i);},
@@ -119,11 +137,13 @@ window.addEventListener("touchend", function(e) {
 	Application.on_click(e);
 }, false);
 
-var timer = setInterval(function() {
+// var timer = setInterval(function() {
+// 	Application.Show();
+// }, 50);
+
+function animate() {
+	requestAnimationFrame(animate);
 	Application.Show();
-}, 50);
+}
 
-
-socket.on('disconnect', () => {
-	console.log('disconnect')
-});
+animate()

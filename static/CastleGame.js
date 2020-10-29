@@ -3,21 +3,26 @@ class TFormCastleGame extends TControl{
 		super();
 		this.Canvas = Canvas;
 		this.table_bg = document.getElementById("table_bgimg");
+		this.animations = [];
+		this.my_sid = socket.io.engine.id;
 
 		this.room = room;
 		console.log(this.room);
+		this.castle = []; // all top cards
 		this.deck = this.generate_deck(this.room.n_cards);
 		this.card = this.deck[0];
 		this.on_castle_init({'top_card': room['first_card']}); //creates this.top_card
-		this.add_child(this.card);
+		this.next_card = null;
+		this.enemies = [];
+		this.create_enemies();
+		console.log(this.enemies)
 		this.add_child(this.top_card);
-		console.log(this.children);
 		this.finished = false;
 		this.place = null;
 
-		this.main_menu_btn = this.add_child(new TButton(Canvas, 5, 85, 90, 10, "#CA6505", 'Main Menu'));
+		this.main_menu_btn = this.add_child(new TButton(Canvas, 5, 85, 90, 10, STYLES.btn, 'Main Menu'));
 		this.main_menu_btn.click = this.main_menu_btn_click.bind(this);
-		this.play_again_btn = this.add_child(new TButton(Canvas, 5, 72, 90, 10, "#CA6505", 'Play Again'));
+		this.play_again_btn = this.add_child(new TButton(Canvas, 5, 72, 90, 10, STYLES.btn, 'Play Again'));
 		this.play_again_btn.click = this.play_again.bind(this);
 		this.play_again_btn.visible = false;
 		this.place_label = this.add_child(new TTextField(this.Canvas, 'Your place is ', 50, 5, 1, 1, '', 6))
@@ -35,13 +40,13 @@ class TFormCastleGame extends TControl{
 		socket.on('game_has_ended', this.on_game_end.bind(this));
 
 		console.log(socket._callbacks);
-
-//		this.ButtonUp1 = new TButton();
 	}
 	on_key_down(e) {}
 	Show() {
 		this.Canvas.drawImage(this.table_bg, 0, 0, CanvasElement.width, CanvasElement.height);
-		this.top_card.Show();
+		this.castle.map(card => card.Show());
+		this.enemies.map(e => e.card.Show());
+		if (this.animations.map(a => a.A_type).indexOf('my_turn') == -1) this.top_card.Show();
 		if (this.finished) {
 			this.Canvas.globalAlpha = 0.5;
 			this.Canvas.fillStyle = 'black';
@@ -54,31 +59,51 @@ class TFormCastleGame extends TControl{
 		}
 		else {
 			this.card.Show();
-        }
+		}
+		for (var i = 0; i < this.animations.length; i++) {
+			if (this.animations[i].ended) {
+				this.animations[i].Show();
+				this.animations.splice(i, 1);
+
+				this.top_card = new TCard(this.Canvas, this.top_card.x, this.top_card.y, 17);
+				this.top_card.items = [];
+				this.top_card.n_items = this.next_card.items.length;
+				for (var i = 0; i < this.top_card.n_items; i++) this.top_card.items.push(new TItem(this.Canvas, this.next_card.items[i].number, this.top_card.r, 0, 0, this.next_card.items[i].scale, this.next_card.items[i].rotation))
+				this.add_child(this.top_card);
+			}
+			else this.animations[i].Show();
+		}
 	}
 	generate_deck(n_cards) {
 		var deck = [];
 		for (var i = 0; i < n_cards; i++) {
-			deck.push(new TCard(Canvas, 50, 75, 180));
+			var card = new TCard(Canvas, 50, 75, 20); 
+			deck.push(card);
+			this.add_child(card)
 		}
 		return deck
 	}
-	show_players() {
-		if (this.room.players_num < 4) {
-			for (var i = 0; i < this.room.players_num; i++)
-			players_pos = [[150 * Application.ScaleX, 50 * Application.ScaleY], []]
-        }
-		this.Canvas.fillStyle = '#ffffff';
-        this.Canvas.font = (8 * Application.ScaleY).toString() + 'px Arial';
-        this.Canvas.textAlign = 'left';
-        this.Canvas.textBaseline = 'top';
-
+	create_enemies() {
+		for (var i = 0; i < this.room.players.length; i++) {
+			if (this.room.players[i] != this.my_sid) {
+				switch (this.enemies.length) {
+					case 0:
+						this.enemies.push({'sid': this.room.players[i], 'card': new TEnemyCard(this.Canvas, -10, 35, 20)});
+						break;
+					case 1:
+						this.enemies.push({'sid': this.room.players[i], 'card': new TEnemyCard(this.Canvas, 110, 35, 20)});
+						break;
+					case 2:
+						this.enemies.push({'sid': this.room.players[i], 'card': new TEnemyCard(this.Canvas, 50, -10, 20)});
+				}
+			}
+		}
 	}
 	on_click(e) {
 		if (!this.finished) {
 			var your_id_clicked = this.card.get_item_id(e);
 			var top_id_clicked = this.top_card.get_item_id(e);
-			var id = false;
+			var id = -1;
 			if (your_id_clicked > -1) {
 				if (this.top_card.check_item(your_id_clicked)) id = your_id_clicked;
 			} else if (top_id_clicked > -1) {
@@ -91,7 +116,7 @@ class TFormCastleGame extends TControl{
 		else super.on_click(e);
 	}
 	on_castle_init(msg) { // initializes castle
-		this.top_card = new TCard(this.Canvas, msg['top_card']['x'], msg['top_card']['y'], 150);
+		this.top_card = new TCard(this.Canvas, msg['top_card']['x'], msg['top_card']['y'], 17);
 		this.top_card.items = [];
 		this.top_card.n_items = msg['top_card']['items'].length;
 		for (var i = 0; i < msg['top_card']['items'].length; i++) {
@@ -101,17 +126,33 @@ class TFormCastleGame extends TControl{
 	}
 	on_castle_updated(msg) { // updates castle
 		var new_items = msg.items
-		this.top_card = new TCard(this.Canvas, this.top_card.x, this.top_card.y, 150);
-		this.top_card.items = [];
-		this.top_card.n_items = new_items.length;
-		for (var i = 0; i < this.top_card.n_items; i++) {
-			this.top_card.items.push(new TItem(this.Canvas, new_items[i].number, this.top_card.r, 0, 0, new_items[i].scale, new_items[i]['rotation']))
+		this.castle.push(this.top_card);
+
+		for (var i = 0; i < this.enemies.length; i++) {
+			if (this.enemies[i].sid == msg.player) {
+				var next_card = new TCard(this.Canvas, this.enemies[i].card.x, this.enemies[i].card.y, 17);
+				next_card.items = [];
+				next_card.n_items = new_items.length;
+				for (var i = 0; i < next_card.n_items; i++) {
+					next_card.items.push(new TItem(this.Canvas, new_items[i].number, next_card.r, 0, 0, new_items[i].scale, new_items[i]['rotation']))
+				}
+				this.next_card = next_card;
+
+				this.animations.push(new TAnimation(this.Canvas, this.next_card, this.top_card, 15, 'enemy_turn', 3));
+			}
 		}
-		this.children[0] = this.top_card;
+
+		for (var i = 0; i < this.enemies.length; i++) if (this.enemies[i].sid == msg.player) this.enemies[i].card = new TEnemyCard(this.Canvas, this.enemies[i].card.x, this.enemies[i].card.y, this.enemies[i].card.r);
+		// this.add_child(this.top_card);
+		// + enemy card animation
 	}
 	on_card_played() {
 		this.deck.splice(0, 1);
-		console.log(this.deck);
+		// start animation
+		this.castle.push(this.top_card);
+		this.animations.push(new TAnimation(this.Canvas, this.card, this.top_card, 15, 'my_turn', 3));
+		this.next_card = this.card;
+
 		if (this.deck.length > 0) this.card = this.deck[0];
 		else {
 			this.card = null;
@@ -138,10 +179,69 @@ class TFormCastleGame extends TControl{
 	}
 }
 
+
+class TAnimation extends TControl {
+	constructor(Canvas, card_A, card_B, angle, A_type, speed=0) {
+		super();
+		this.Canvas = Canvas;
+		this.card_A = card_A;
+		this.card_B = card_B;
+		this.A_type = A_type;
+		this.speed = speed; // %
+		this.g = 9.8;
+		this.angle = angle;
+		this.dx = this.card_A.x - this.card_B.x;
+		this.dy = this.card_A.y - this.card_B.y;
+		this.init_r = this.card_A.r;
+		this.init_x = this.card_A.x;
+		this.init_y = this.card_A.y;
+		this.hyp = Math.sqrt(this.dx ** 2 + this.dy ** 2); // hypotenuse
+		this.r0 = (this.card_A.r - this.card_B.r) * Math.tan((90 - this.angle) * Math.PI / 180);
+		this.v = Math.sqrt((this.g * (this.dy - this.r0)) / (2 * Math.sin(this.angle * Math.PI / 180)));
+		this.v1 = Math.sqrt((this.g * (this.hyp - this.r0)) / (2 * Math.sin(this.angle * Math.PI / 180)));
+		this.cur_y = 0;
+		this.cur_pos = 0;
+		this.ended = false;
+	}
+	Show() {
+		if (this.A_type == 'my_turn') {
+			if (this.cur_y < this.dy) {
+				var h = this.cur_y * Math.tan(this.angle * Math.PI / 180) - (this.g * (this.cur_y ** 2)) / (2 * (this.v ** 2) * Math.cos(this.angle * Math.PI / 180));
+				this.card_A.y -= this.speed;
+				this.card_A.r = this.init_r + h;
+				this.cur_y += this.speed;
+				this.card_A.Show()
+			} else {
+				this.card_A.Show()
+				this.ended = true;
+			}
+		}
+		if (this.A_type == 'enemy_turn') {
+			if (this.cur_pos < this.hyp) {
+				var sin_beta = this.dx / this.hyp;
+				var cos_beta = this.dy / this.hyp
+				var h = this.cur_pos * Math.tan(this.angle * Math.PI / 180) - (this.g * (this.cur_pos ** 2)) / (2 * (this.v1 ** 2) * Math.cos(this.angle * Math.PI / 180));
+				var deltaX = this.cur_pos * sin_beta
+				var deltaY = this.cur_pos * cos_beta
+				this.card_A.x = this.init_x - deltaX;
+				this.card_A.y = this.init_y - deltaY;
+				this.card_A.r = this.init_r + h;
+				this.cur_pos += this.speed;
+				this.card_A.Show()
+			}
+			else {
+				this.card_A.Show()
+				this.ended = true;
+			}
+		}
+	}
+}
+
+
 class TCard {
 	constructor(Canvas, x, y, r) {
 		this.Canvas = Canvas;
-		this.max_r = r;
+		this.max_r = r; // % by y-axis !!!
 		this.r = r;
 		this.n_items = getRandomInt(8, 10);
 		this.items = this.generate_items();
@@ -150,10 +250,10 @@ class TCard {
 		this.y = y; // в процентах
 	}
 	Show() {
-		if (30 * Application.ScaleX < this.max_r) this.r = 30 * Application.ScaleX;
+		// if ((this.r < this.max_r) && (!this.parent.A_type)) this.r = ;
 		this.Canvas.fillStyle = '#ffffff';
 		this.Canvas.beginPath();
-		this.Canvas.arc(this.x * Application.ScaleX, this.y * Application.ScaleY, this.r, 0, 2 * Math.PI);
+		this.Canvas.arc(this.x * Application.ScaleX, this.y * Application.ScaleY, this.r * Application.ScaleY, 0, 2 * Math.PI);
 		this.Canvas.fill();
 		//var img1 = this.get_image_coords(20, 0, 0);
 		//this.Canvas.drawImage(this.images, img1[0], img1[1], img1[2], img1[3], 0, 0, img1[2], img1[3]);
@@ -164,17 +264,17 @@ class TCard {
 		this.Canvas.stroke();*/
 
 		for (var i = 0; i < this.n_items - 1; i++) {
-			var xc = this.x * Application.ScaleX + Math.cos(2 * (i + 1) * Math.PI / (this.n_items - 1)) * this.r * 0.7;
-			var yc = this.y * Application.ScaleY - Math.sin(2 * (i + 1) * Math.PI / (this.n_items - 1)) * this.r * 0.7;
+			var xc = this.x * Application.ScaleX + Math.cos(2 * (i + 1) * Math.PI / (this.n_items - 1)) * this.r * Application.ScaleY * 0.7;
+			var yc = this.y * Application.ScaleY - Math.sin(2 * (i + 1) * Math.PI / (this.n_items - 1)) * this.r * Application.ScaleY * 0.7;
 
 			this.items[i].xc = xc;
 			this.items[i].yc = yc;
-			this.items[i].rc = this.r;
+			this.items[i].rc = this.r * Application.ScaleY;
 			this.items[i].Show();
 		}
 			this.items[this.n_items - 1].xc = this.x * Application.ScaleX;
 			this.items[this.n_items - 1].yc = this.y * Application.ScaleY;
-			this.items[this.n_items - 1].rc = this.r;
+			this.items[this.n_items - 1].rc = this.r * Application.ScaleY;
 			this.items[this.n_items - 1].Show();
 	}
 	generate_items() {
@@ -197,7 +297,8 @@ class TCard {
 	get_item_id(e) {
 		var x = this.x * Application.ScaleX - e.x;
 		var y = this.y * Application.ScaleY - e.y;
-		if (x * x + y * y <= this.r * this.r) {
+		var r = this.r * Application.ScaleY
+		if (x * x + y * y <= r * r) {
 			for (var i of this.items) {
 				var xi = this.x * Application.ScaleX - i.xc - x;
 				var yi = this.y * Application.ScaleY - i.yc - y;
@@ -207,6 +308,15 @@ class TCard {
 		return -1
 	}
 }
+
+
+class TEnemyCard extends TCard {
+	constructor(Canvas, x, y, r) {
+		super(Canvas, x, y, r);
+		for (var i = 0; i < this.items.length; i++) this.items[i].number = 63;
+	}
+}
+
 
 class TItem {
 	constructor(Canvas, number, rc, xc, yc, scale=0.25, rotation=45) {

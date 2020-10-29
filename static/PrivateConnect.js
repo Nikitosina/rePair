@@ -23,23 +23,23 @@ class TFormPrivateConnect extends TControl {
     }
     create_btns() {
         this.add_child(new TTextField(Canvas, 'Join room by codename:', 5, 5, 90, 10, '', 4))
-        this.pw_circles = this.add_child(new TPasswordCircles(Canvas, 6, 24, 20, 60, 2, '#CA6505', '#CA6505'))
-        this.home = this.add_child(new TButton(Canvas, 1, 1, 10, 8, "#CA6505", 'Home', undefined, 2));
+        this.pw_circles = this.add_child(new TPasswordCircles(Canvas, 6, 24, 20, 60, 2, STYLES.cn_circle_outline, STYLES.cn_circle))
+        this.home = this.add_child(new TButton(Canvas, 1, 1, 10, 8, STYLES.btn, 'Home', undefined, 2));
         this.home.click = this.home_btn_click.bind(this)
 
         var x0 = 24;
         var y0 = 30;
         for (var i = 0; i < 3; i++) {
             for (var j = 0; j < 3; j++) {
-                var b = this.add_child(new TButton(this.Canvas, x0 + j * 18, y0 + i * 15, 15, 12, '#CA6505', i * 3 + j + 1));
+                var b = this.add_child(new TButton(this.Canvas, x0 + j * 18, y0 + i * 15, 15, 12, STYLES.btn, i * 3 + j + 1));
                 b.click = this.pw_circles.new_number.bind(this.pw_circles);
             }
         }
-        this.paste_btn = this.add_child(new TButton(this.Canvas, x0 + 0 * 18, y0 + 3 * 15, 15, 12, '#CA6505', 'Paste', undefined, 4));
+        this.paste_btn = this.add_child(new TButton(this.Canvas, x0 + 0 * 18, y0 + 3 * 15, 15, 12, STYLES.btn, 'Paste', undefined, 4));
         this.paste_btn.click = this.pw_circles.paste.bind(this.pw_circles);
-        this.zero = this.add_child(new TButton(this.Canvas, x0 + 1 * 18, y0 + 3 * 15, 15, 12, '#CA6505', 0));
+        this.zero = this.add_child(new TButton(this.Canvas, x0 + 1 * 18, y0 + 3 * 15, 15, 12, STYLES.btn, 0));
         this.zero.click = this.pw_circles.new_number.bind(this.pw_circles);
-        this.delete_btn = this.add_child(new TButton(this.Canvas, x0 + 2 * 18, y0 + 3 * 15, 15, 12, '#CA6505', 'Delete', undefined, 4));
+        this.delete_btn = this.add_child(new TButton(this.Canvas, x0 + 2 * 18, y0 + 3 * 15, 15, 12, STYLES.btn, 'Delete', undefined, 4));
         this.delete_btn.click = this.pw_circles.del_last.bind(this.pw_circles);
     }
     home_btn_click() {

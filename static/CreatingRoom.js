@@ -8,29 +8,29 @@ class TFormCreateRoom extends TControl {
         this.n_cards = 3;
         this.private = false;
         this.table_bg = document.getElementById("table_bgimg");
-        this.two_btn = this.add_child(new TButton(Canvas, 5, 10, 28, 10, "#CA6505", '2', 1));
-        this.three_btn = this.add_child(new TButton(Canvas, 36, 10, 28, 10, "#CA6505", '3', 1));
-        this.four_btn = this.add_child(new TButton(Canvas, 67, 10, 28, 10, "#CA6505", '4', 1));
+        this.two_btn = this.add_child(new TButton(Canvas, 5, 10, 28, 10, STYLES.btn, '2', 1));
+        this.three_btn = this.add_child(new TButton(Canvas, 36, 10, 28, 10, STYLES.btn, '3', 1));
+        this.four_btn = this.add_child(new TButton(Canvas, 67, 10, 28, 10, STYLES.btn, '4', 1));
         this.two_btn.click = this.change_player_num.bind(this);
         this.three_btn.click = this.change_player_num.bind(this);
         this.four_btn.click = this.change_player_num.bind(this);
         this.two_btn.pressed = true;
-        this.castle_btn = this.add_child(new TButton(Canvas, 5, 25, 90, 10, "#CA6505", 'Castle', 2));
+        this.castle_btn = this.add_child(new TButton(Canvas, 5, 25, 90, 10, STYLES.btn, 'Castle', 2));
         this.castle_btn.pressed = true;
         this.add_child(new TTextField(Canvas, 'Number of cards', 5, 38, 90, 10, '', 6))
-        this.cards_less_btn = this.add_child(new TButton(Canvas, 5, 50, 8, 10, "#CA6505", '<'));
-        this.card_count = this.add_child(new TTextField(Canvas, this.n_cards, 15, 50, 70, 10, "#CA6505"));
-        this.cards_more_btn = this.add_child(new TButton(Canvas, 87, 50, 8, 10, "#CA6505", '>'));
+        this.cards_less_btn = this.add_child(new TButton(Canvas, 5, 50, 8, 10, STYLES.btn, '<'));
+        this.card_count = this.add_child(new TTextField(Canvas, this.n_cards, 15, 50, 70, 10, STYLES.btn));
+        this.cards_more_btn = this.add_child(new TButton(Canvas, 87, 50, 8, 10, STYLES.btn, '>'));
         this.cards_less_btn.click = this.less_cards.bind(this)
         this.cards_more_btn.click = this.more_cards.bind(this)
-        this.public_btn = this.add_child(new TButton(Canvas, 5, 70, 44, 10, "#CA6505", 'Public', 3));
+        this.public_btn = this.add_child(new TButton(Canvas, 5, 70, 44, 10, STYLES.btn, 'Public', 3));
         this.public_btn.pressed = true;
         this.public_btn.click = this.make_public.bind(this)
-        this.private_btn = this.add_child(new TButton(Canvas, 51, 70, 44, 10, "#CA6505", 'Private', 3));
+        this.private_btn = this.add_child(new TButton(Canvas, 51, 70, 44, 10, STYLES.btn, 'Private', 3));
         this.private_btn.click = this.make_private.bind(this)
-        this.create_btn = this.add_child(new TButton(Canvas, 5, 82, 90, 10, "#CA6505", 'CREATE'));
+        this.create_btn = this.add_child(new TButton(Canvas, 5, 82, 90, 10, STYLES.btn, 'CREATE'));
         this.create_btn.click = this.create_btn_click.bind(this);
-        this.home = this.add_child(new TButton(Canvas, 1, 1, 10, 8, "#CA6505", 'Home', undefined, 2));
+        this.home = this.add_child(new TButton(Canvas, 1, 1, 10, 8, STYLES.btn, 'Home', undefined, 2));
         this.home.click = this.home_btn_click.bind(this)
         socket.on('created_room', this.on_created_room.bind(this));
     }

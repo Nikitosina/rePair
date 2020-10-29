@@ -39,17 +39,17 @@ class Room:
                 CODENAMES_TAKEN.add(x)
                 return x
 
-    def broadcast(self, event, msg):
+    def broadcast(self, event, msg, exc=''):
         print(msg)
         for p in self.players:
-            # print(len(self.players))
-            emit(event, msg, room=p)
+            if p != exc:
+                emit(event, msg, room=p)
     
-    def place_card(self, items, item_id):
+    def place_card(self, items, item_id, req_sid):
         for i in range(len(self.first_card['items'])):
             if item_id == self.first_card['items'][i]['number']:
                 self.first_card['items'] = items
-                self.broadcast('updated_castle', {'items': items})
+                self.broadcast('updated_castle', {'items': items, 'player': req_sid}, exc=req_sid)
                 return True
         return False
 

@@ -101,7 +101,7 @@ def update_castle(json):
     print(items, item_id)
     for room in rooms:
         if request.sid in room.players:
-            success = room.place_card(items, item_id)
+            success = room.place_card(items, item_id, request.sid)
             if success:
                 emit('card_played', {}, room=request.sid)
             # room.broadcast('updated_castle', json)

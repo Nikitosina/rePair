@@ -40,9 +40,9 @@ class TButton extends TControl {
     }
     on_mousemove(e){
 		if (this.is_inside(e.x, e.y)) {
-			this.fill_color = '#A55202';
+			this.fill_color = STYLES.btn_pressed;
 		}
-		else this.fill_color = '#CA6505';
+		else this.fill_color = STYLES.btn;
 	}
 	on_click(e) {
         // console.log(this.is_inside(e.x, e.y), this);
@@ -138,5 +138,22 @@ class TErrorField extends TTextField {
     }
     Show() {
         super.Show()
+    }
+}
+
+
+class TImage extends TControl {
+    constructor(Canvas, filename, x, y, width, height) {
+        super();
+        this.Canvas = Canvas;
+        this.filename = filename;
+        this.x = x;
+        this.y = y; 
+        this.width = width;
+        this.height = height;
+        this.img = document.getElementById(this.filename);
+    }
+    Show() {
+        this.Canvas.drawImage(this.img, this.x * Application.ScaleX, this.y * Application.ScaleY, this.width * Application.ScaleX, this.height * Application.ScaleY);
     }
 }

@@ -11,7 +11,7 @@ class TFormLoadingScreen extends TControl {
 		this.player_count_label = this.add_child(new TTextField(Canvas, 'players ' + this.room.players.length + '/' + this.room.players_num, 50, 40, 1, 1, '', 7))
 		if (this.room.private) {
 			this.add_child(new TTextField(Canvas, 'Your room codename:', 5, 60, 90, 10, '', 6))
-			this.copy_cn_btn = this.add_child(new TButton(Canvas, 30, 70, 40, 10, "#CA6505", this.room.codename))
+			this.copy_cn_btn = this.add_child(new TButton(Canvas, 30, 70, 40, 10, STYLES.btn, this.room.codename))
 			this.copy_cn_btn.click = this.copy_codename.bind(this)
 		}
 

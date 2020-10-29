@@ -2,15 +2,15 @@ class TFormMainScreen extends TControl {
 	constructor(Canvas){
 		super();
 		this.Canvas = Canvas;
-		this.table_bg = document.getElementById("table_bgimg");
-		this.create_room_btn = this.add_child(new TButton(Canvas, 5, 85, 90, 10, "#CA6505", 'Create Room'));
+		this.table_bg = this.add_child(new TImage(Canvas, 'table_bgimg', 0, 0, 100, 100));
+		this.create_room_btn = this.add_child(new TButton(Canvas, 5, 85, 90, 10, STYLES.btn, 'Create Room'));
 		this.create_room_btn.click = this.create_room_btn_click.bind(this);
-		this.login_page_btn = this.add_child(new TButton(Canvas, 67, 5, 28, 10, "#CA6505", 'login', undefined, 4));
+		this.login_page_btn = this.add_child(new TButton(Canvas, 67, 5, 28, 10, STYLES.btn, 'login', undefined, 4));
 		this.login_page_btn.click = this.to_login_page.bind();
-		this.box = this.add_child(new TBox(Canvas, 5, 20, 90, 60, '#824401'));
-		this.refresh_btn = this.add_child(new TButton(Canvas, 5, 5, 30, 10, "#CA6505", 'Refresh', undefined, 4));
+		this.box = this.add_child(new TBox(Canvas, 5, 20, 90, 60, STYLES.box));
+		this.refresh_btn = this.add_child(new TButton(Canvas, 5, 5, 30, 10, STYLES.btn, 'Refresh', undefined, 4));
 		this.refresh_btn.click = this.get_all_rooms.bind(this);
-		this.connect_to_private_btn = this.add_child(new TButton(Canvas, 37, 5, 28, 10, "#CA6505", 'Private', undefined, 4));
+		this.connect_to_private_btn = this.add_child(new TButton(Canvas, 37, 5, 28, 10, STYLES.btn, 'Private', undefined, 4));
 		this.connect_to_private_btn.click = this.connect_to_private.bind(this)
 
 		if ('$all_rooms' in socket._callbacks) {
@@ -25,9 +25,7 @@ class TFormMainScreen extends TControl {
 		this.get_all_rooms();
 	}
 	Show() {
-		this.Canvas.drawImage(this.table_bg, 0, 0, CanvasElement.width, CanvasElement.height);
 		super.Show();
-
 		//Application.print_with_the_font('alpha v0.2', CanvasElement.width-CanvasElement.width/7, CanvasElement.height-CanvasElement.height/28, CanvasElement.width/700);
 	}
 	get_all_rooms() {
@@ -39,7 +37,7 @@ class TFormMainScreen extends TControl {
 		//this.box = [];
         for (var i = 0; i < msg.length; i++) {
 			var text = msg[i].name + ' | Gametype: ' + msg[i].game_type + ' | Cards: ' + msg[i].n_cards + ' | Players: ' + msg[i].players.length + '/' + msg[i].players_num
-            var b = this.box.add_child(new TButton(this.Canvas, this.box.x + 2, this.box.y + (i * 10) + 2, this.box.width - 4, 8, '#CA6505', text, undefined, 2));
+            var b = this.box.add_child(new TButton(this.Canvas, this.box.x + 2, this.box.y + (i * 10) + 2, this.box.width - 4, 8, STYLES.btn, text, undefined, 2));
         	b.click = this.join_room_btn_click.bind(this);
         	b.json = msg[i]
         }
