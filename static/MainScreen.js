@@ -2,7 +2,8 @@ class TFormMainScreen extends TControl {
 	constructor(Canvas){
 		super();
 		this.Canvas = Canvas;
-		this.table_bg = this.add_child(new TImage(Canvas, 'table_bgimg', 0, 0, 100, 100));
+		// this.table_bg = this.add_child(new TImage(Canvas, 'table_bgimg', 0, 0, 100, 100));
+		this.bg = this.add_child(new TBGAnimation(this.Canvas, 10, 5));
 		this.create_room_btn = this.add_child(new TButton(Canvas, 5, 85, 90, 10, STYLES.btn, 'Create Room'));
 		this.create_room_btn.click = this.create_room_btn_click.bind(this);
 		this.login_page_btn = this.add_child(new TButton(Canvas, 67, 5, 28, 10, STYLES.btn, 'login', undefined, 4));

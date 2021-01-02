@@ -63,12 +63,12 @@ class TFormCastleGame extends TControl{
 		for (var i = 0; i < this.animations.length; i++) {
 			if (this.animations[i].ended) {
 				this.animations[i].Show();
-				this.animations.splice(i, 1);
 
-				this.top_card = new TCard(this.Canvas, this.top_card.x, this.top_card.y, 17);
+				this.top_card = new TCard(this.Canvas, this.animations[i].card_A.x, this.animations[i].card_A.y, 17);
 				this.top_card.items = [];
 				this.top_card.n_items = this.next_card.items.length;
-				for (var i = 0; i < this.top_card.n_items; i++) this.top_card.items.push(new TItem(this.Canvas, this.next_card.items[i].number, this.top_card.r, 0, 0, this.next_card.items[i].scale, this.next_card.items[i].rotation))
+				for (var j = 0; j < this.top_card.n_items; j++) this.top_card.items.push(new TItem(this.Canvas, this.next_card.items[j].number, this.top_card.r, 0, 0, this.next_card.items[j].scale, this.next_card.items[j].rotation));
+				this.animations.splice(i, 1);
 				this.add_child(this.top_card);
 			}
 			else this.animations[i].Show();
@@ -138,7 +138,7 @@ class TFormCastleGame extends TControl{
 				}
 				this.next_card = next_card;
 
-				this.animations.push(new TAnimation(this.Canvas, this.next_card, this.top_card, 15, 'enemy_turn', 3));
+				this.animations.push(new TAnimation(this.Canvas, this.next_card, this.top_card, 15, 'turn', 3));
 			}
 		}
 
@@ -150,7 +150,7 @@ class TFormCastleGame extends TControl{
 		this.deck.splice(0, 1);
 		// start animation
 		this.castle.push(this.top_card);
-		this.animations.push(new TAnimation(this.Canvas, this.card, this.top_card, 15, 'my_turn', 3));
+		this.animations.push(new TAnimation(this.Canvas, this.card, this.top_card, 15, 'turn', 3, 5));
 		this.next_card = this.card;
 
 		if (this.deck.length > 0) this.card = this.deck[0];
@@ -181,42 +181,30 @@ class TFormCastleGame extends TControl{
 
 
 class TAnimation extends TControl {
-	constructor(Canvas, card_A, card_B, angle, A_type, speed=0) {
+	constructor(Canvas, card_A, card_B, angle, A_type, speed=0, k_shiftx=0) {
 		super();
 		this.Canvas = Canvas;
 		this.card_A = card_A;
 		this.card_B = card_B;
 		this.A_type = A_type;
 		this.speed = speed; // %
+		this.k_shiftx = k_shiftx;
+		this.shiftx = this.k_shiftx * (Math.random() - 0.5)
 		this.g = 9.8;
 		this.angle = angle;
-		this.dx = this.card_A.x - this.card_B.x;
+		this.dx = this.card_A.x - this.card_B.x + this.shiftx;
 		this.dy = this.card_A.y - this.card_B.y;
 		this.init_r = this.card_A.r;
 		this.init_x = this.card_A.x;
 		this.init_y = this.card_A.y;
 		this.hyp = Math.sqrt(this.dx ** 2 + this.dy ** 2); // hypotenuse
 		this.r0 = (this.card_A.r - this.card_B.r) * Math.tan((90 - this.angle) * Math.PI / 180);
-		this.v = Math.sqrt((this.g * (this.dy - this.r0)) / (2 * Math.sin(this.angle * Math.PI / 180)));
 		this.v1 = Math.sqrt((this.g * (this.hyp - this.r0)) / (2 * Math.sin(this.angle * Math.PI / 180)));
-		this.cur_y = 0;
 		this.cur_pos = 0;
 		this.ended = false;
 	}
 	Show() {
-		if (this.A_type == 'my_turn') {
-			if (this.cur_y < this.dy) {
-				var h = this.cur_y * Math.tan(this.angle * Math.PI / 180) - (this.g * (this.cur_y ** 2)) / (2 * (this.v ** 2) * Math.cos(this.angle * Math.PI / 180));
-				this.card_A.y -= this.speed;
-				this.card_A.r = this.init_r + h;
-				this.cur_y += this.speed;
-				this.card_A.Show()
-			} else {
-				this.card_A.Show()
-				this.ended = true;
-			}
-		}
-		if (this.A_type == 'enemy_turn') {
+		if (this.A_type == 'turn') {
 			if (this.cur_pos < this.hyp) {
 				var sin_beta = this.dx / this.hyp;
 				var cos_beta = this.dy / this.hyp
@@ -230,6 +218,7 @@ class TAnimation extends TControl {
 				this.card_A.Show()
 			}
 			else {
+				this.card_A.y = this.card_B.y;
 				this.card_A.Show()
 				this.ended = true;
 			}
