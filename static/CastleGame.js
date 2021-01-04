@@ -101,14 +101,16 @@ class TFormCastleGame extends TControl{
 	}
 	on_click(e) {
 		if (!this.finished) {
-			var your_id_clicked = this.card.get_item_id(e);
-			var top_id_clicked = this.top_card.get_item_id(e);
 			var id = -1;
-			if (your_id_clicked > -1) {
-				if (this.top_card.check_item(your_id_clicked)) id = your_id_clicked;
-			} else if (top_id_clicked > -1) {
-				if (this.card.check_item(top_id_clicked)) id = top_id_clicked;
+			if (this.card.is_inside(e)) {
+				var your_id_clicked = this.card.get_item_id(e);
+				if ((your_id_clicked > -1) && (this.card.check_timer()) && (this.top_card.check_item(your_id_clicked))) id = your_id_clicked;
 			}
+			if (this.card.is_inside(e)) {
+				var top_id_clicked = this.top_card.get_item_id(e);
+				if ((top_id_clicked > -1) && (this.top_card.check_timer()) && (this.card.check_item(your_id_clicked))) id = top_id_clicked;
+			}
+
 			if (id > -1) {
 				socket.emit('update_castle', {'items': this.card.items, 'item_id': id});
 			}
@@ -237,6 +239,8 @@ class TCard {
 		this.items[this.n_items - 1].scale += 0.1;
 		this.x = x; // %
 		this.y = y; // в процентах
+		this.clicks_count = 0;
+		this.timer = null;
 	}
 	Show() {
 		// if ((this.r < this.max_r) && (!this.parent.A_type)) this.r = ;
@@ -286,8 +290,7 @@ class TCard {
 	get_item_id(e) {
 		var x = this.x * Application.ScaleX - e.x;
 		var y = this.y * Application.ScaleY - e.y;
-		var r = this.r * Application.ScaleY
-		if (x * x + y * y <= r * r) {
+		if (this.is_inside(e)) {
 			for (var i of this.items) {
 				var xi = this.x * Application.ScaleX - i.xc - x;
 				var yi = this.y * Application.ScaleY - i.yc - y;
@@ -295,6 +298,33 @@ class TCard {
 			}
 		}
 		return -1
+	}
+	is_inside(e) {
+		var x = this.x * Application.ScaleX - e.x;
+		var y = this.y * Application.ScaleY - e.y;
+		var r = this.r * Application.ScaleY;
+		if (x * x + y * y <= r * r) return true;
+		return false;
+	}
+	check_timer() {
+		console.log(this.clicks_count);
+		if (this.clicks_count == 0) {
+			this.timer = setTimeout(this.reset_clicks(), 1000);
+			this.clicks_count += 1
+			return true;
+		}
+		if (this.clicks_count <= 3) {
+			this.clicks_count += 1;
+			return true;
+		}
+		clearTimeout(this.timer);
+		this.clicks_count += 1
+		this.timer = setTimeout(this.reset_clicks(), 500);
+		return false;
+	}
+	reset_clicks() {
+		console.log(this.clicks_count + '!')
+		this.clicks_count = 0
 	}
 }
 
